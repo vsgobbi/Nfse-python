@@ -1,0 +1,17 @@
+README.md
+setup.py
+nfse_python.egg-info/PKG-INFO
+nfse_python.egg-info/SOURCES.txt
+nfse_python.egg-info/dependency_links.txt
+nfse_python.egg-info/top_level.txt
+samples/
+samples/__init__.py
+samples/cancelamentoNFE.py
+samples/envioRPS.py
+services/Services.py
+services/__init__.py
+utils/PostXML.py
+utils/SignerXML.py
+utils/Utils.py
+utils/__init__.py
+utils/soapMessages.py
