@@ -13,7 +13,6 @@ Creates POST requests on WebServices as NFe and NFSe.
 - [Usage](#usage)
 - [Features](#features)
 - [Contributing](#contributing)
-- [FAQ](#faq)
 - [Support](#support)
 - [License](#license)
 
@@ -147,13 +146,6 @@ print(result)
 
 - **Step 3**
     - 🔃 Create a new pull request using <a href="https://github.com/starkbank/nfe/compare/" target="_blank">`https://github.com/starkbank/nfe/compare/`</a>
-
----
-
-## FAQ
-
-- **Questions?**
-    - Direct me
 
 ---
 
