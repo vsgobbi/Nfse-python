@@ -34,7 +34,7 @@ objSignCert.verifySignature(signedRoot)
 
 # Sign and post a xml example:
 objRequestPost = Services(certificateFile=certificateFile, privateKeyRSA=privateKeyRSA, privateKeyFile=privateKeyFile)
-cnpj = "00623904000173"
-cnpjContribuinte = "00623904000173"
-result = objRequestPost.consultaCNPJ(cnpj=cnpj, cnpjContribuinte=cnpjContribuinte)
+taxId = "00623904000173"
+taxPayerId = "00623904000173"
+result = objRequestPost.consultTaxIdInscription(taxId=taxId, taxPayerId=taxPayerId)
 print(result)

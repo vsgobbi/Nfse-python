@@ -253,7 +253,7 @@ class CertData(Certificate):
         xmlEnvelope = etree.tostring(bufferXml, encoding="unicode",  pretty_print=False)
         return self.signWithCert(xmlEnvelope, key=self.keyFile)
 
-    def signMessageWithCrypto(self, message, stringXml):  # Utilizada para assinar e validar mensagem de envioRPS
+    def signMessageWithCrypto(self, message, stringXml):  # Utilizada para assinar e validar mensagem de sendRPS
 
         message = [elem.encode("hex") for elem in message]
         print("Message 08b: ", message)

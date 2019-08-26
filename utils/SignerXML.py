@@ -1,16 +1,8 @@
 # -*- coding: utf-8 -*-
 import subprocess
 from utils.Utils import Certificate, CertData
-from PostXML import PostXML
 
 NAMESPACE_SIG = 'http://www.w3.org/2000/09/xmldsig#'
-
-# Working with .crt and .pem files:
-# certificateFile = "../certfiles/converted.crt"
-# privatekeyRSA = "../certfiles/privRSAkey.pem"
-# privatekeyFile = "../certfiles/privateKey.key"
-
-# postObj = PostXML(cert=certificateFile, key=privatekeyRSA, uf="PREFEITURA")
 
 
 class SignCert:

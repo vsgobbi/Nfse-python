@@ -21,7 +21,7 @@ envioRPS2 = """
 envioLoteRPS = """
 <p1:PedidoEnvioLoteRPS xmlns:p1="http://www.prefeitura.sp.gov.br/nfe" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 <Cabecalho xmlns="" Versao="1"><CPFCNPJRemetente><CNPJ></CNPJ></CPFCNPJRemetente>
-<transacao>false</transacao><dtInicio>2019-07-01</dtInicio><dtFim>2019-07-01</dtFim>
+<transacao>false</transacao><initDate>2019-07-01</initDate><endDate>2019-07-01</endDate>
 <QtdRPS>1</QtdRPS><ValorTotalServicos>2</ValorTotalServicos>
 <ValorTotalDeducoes>0</ValorTotalDeducoes></Cabecalho><RPS xmlns="">
 <Assinatura></Assinatura><ChaveRPS><InscricaoPrestador></InscricaoPrestador>

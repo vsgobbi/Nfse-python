@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 from services.Services import Services
 
-cnpj = "43211234567890"
-numeroNfe = "160"
+taxId = "20018183000180"
+nfeNum = "160"
 
 
 objServ = Services(certificateFile="../certfiles/converted.crt",
                    privateKeyRSA="../certfiles/privRSAkey.pem",
                    privateKeyFile="../certfiles/privateKey.key")
 
-nfse = objServ.consultaNFE(cnpj=cnpj, nfe=numeroNfe)
+Services.certificateFile = "../certfiles/converted.crt"
+Services.privateKeyRSA = "../certfiles/privRSAkey.pem"
+Services.privateKeyFile = "../certfiles/privateKey.key"
+nfse = objServ.consultNfe(taxId=taxId, nfe=nfeNum)
 print(nfse)

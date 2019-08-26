@@ -14,10 +14,6 @@ NAMESPACE_XSD = 'http://www.w3.org/2001/XMLSchema'
 NAMESPACE_METODO = 'http://www.portalfiscal.inf.br/nfe/wsdl/'
 NAMESPACE_METODO_PREFEITURA = 'http://www.prefeitura.sp.gov.br/nfe'
 
-NFSE = {
-    'AUTORIZACAO': 'https://nfe.prefeitura.sp.gov.br/ws/lotenfe.asmx'
-}    # Prefeitura nao possui ambiente de homologacao para nfse
-
 NFE = {
         'SP': {
         'STATUS': 'nfe.fazenda.sp.gov.br/ws/nfestatusservico4.asmx',
@@ -146,7 +142,7 @@ class PostXML:
                 res.setdefault("{tag}".format(tag=i.tag), "{text}".format(text=text))
         return dumps(res, ensure_ascii=False)
 
-    def _construir_xml_soap(self, metodo, dados, orgao_publico):
+    def _construct_xml_soap(self, metodo, dados, orgao_publico):
         self.entityType = orgao_publico
         if orgao_publico == "SP":
             raiz = etree.Element('{%s}Envelope' % NAMESPACE_SOAP, nsmap={
@@ -165,7 +161,7 @@ class PostXML:
             return "Nao foi possivel verificar tipo de servico"
         return raiz
 
-    def consultaCNPJ(self, signedXml):
+    def consultSubscription(self, signedXml):
         raiz = etree.Element('{%s}Envelope' % NAMESPACE_SOAP, nsmap={
             'xsi': NAMESPACE_XSI, 'xsd': NAMESPACE_XSD, 'soap': NAMESPACE_SOAP})
         body = etree.SubElement(raiz, '{%s}Body' % NAMESPACE_SOAP)
@@ -178,7 +174,7 @@ class PostXML:
         url = self._get_url(consulta='CADASTRO')
         return self._post(url, raiz)
 
-    def consultaNFe(self, signedXml):
+    def consultNfe(self, signedXml):
         raiz = etree.Element('{%s}Envelope' % NAMESPACE_SOAP, nsmap={
             'xsi': NAMESPACE_XSI, 'xsd': NAMESPACE_XSD, 'soap': NAMESPACE_SOAP})
         body = etree.SubElement(raiz, '{%s}Body' % NAMESPACE_SOAP)
@@ -191,7 +187,7 @@ class PostXML:
         url = self._get_url(consulta='CONSULTA')
         return self._post(url, raiz)
 
-    def cancelaNfe(self, signedXml):
+    def cancelNfe(self, signedXml):
         raiz = etree.Element('{%s}Envelope' % NAMESPACE_SOAP, nsmap={
             'xsi': NAMESPACE_XSI, 'xsd': NAMESPACE_XSD, 'soap': NAMESPACE_SOAP})
         body = etree.SubElement(raiz, '{%s}Body' % NAMESPACE_SOAP)
@@ -228,7 +224,7 @@ class PostXML:
         url = self._get_url(consulta='ENVIOLOTERPS')
         return self._post(url, raiz)
 
-    def envioRPS(self, signedXml):
+    def sendRPS(self, signedXml):
         raiz = etree.Element('{%s}Envelope' % NAMESPACE_SOAP, nsmap={
             'xsi': NAMESPACE_XSI, 'xsd': NAMESPACE_XSD, 'soap': NAMESPACE_SOAP})
         body = etree.SubElement(raiz, '{%s}Body' % NAMESPACE_SOAP)
@@ -241,7 +237,7 @@ class PostXML:
         url = self._get_url(consulta='AUTORIZACAO')
         return self._post(url, raiz)
 
-    def consultaNFeRecebidas(self, signedXml):
+    def consultReceivedNfe(self, signedXml):  # Nfe recebidas
         raiz = etree.Element('{%s}Envelope' % NAMESPACE_SOAP, nsmap={
             'xsi': NAMESPACE_XSI, 'xsd': NAMESPACE_XSD, 'soap': NAMESPACE_SOAP})
         body = etree.SubElement(raiz, '{%s}Body' % NAMESPACE_SOAP)
@@ -254,7 +250,7 @@ class PostXML:
         url = self._get_url(consulta='CONSULTA')
         return self._post(url, raiz)
 
-    def consultaNFeEmitidas(self, signedXml):
+    def consultSentNfe(self, signedXml):  # Nfe emitidas
         raiz = etree.Element('{%s}Envelope' % NAMESPACE_SOAP, nsmap={
             'xsi': NAMESPACE_XSI, 'xsd': NAMESPACE_XSD, 'soap': NAMESPACE_SOAP})
         body = etree.SubElement(raiz, '{%s}Body' % NAMESPACE_SOAP)
@@ -275,7 +271,7 @@ class PostXML:
             etree.SubElement(info, 'xServ').text = 'CONS-CAD'
             etree.SubElement(info, 'UF').text = self.uf.upper()
             etree.SubElement(info, 'CNPJ').text = cnpj
-            xml = self._construir_xml_soap('CadConsultaCadastro4', raiz, self.uf)
+            xml = self._construct_xml_soap('CadConsultaCadastro4', raiz, self.uf)
             url = self._get_url(consulta='CADASTRO')
             return self._post(url, xml)
 
@@ -294,7 +290,7 @@ class PostXML:
             signedEnvelope = CertData(certFile=self.cert, keyFile=self.key)
             xmlSigned = signedEnvelope.signWithCert(xmlToSign, key=self.key)
             xmlSigned = (etree.fromstring(xmlSigned))
-            xmlSigned = self._construir_xml_soap('ConsultaCNPJRequest', xmlSigned, self.uf)
+            xmlSigned = self._construct_xml_soap('ConsultaCNPJRequest', xmlSigned, self.uf)
             url = self._get_url(consulta='CADASTRO')
 
             print("Envelope assinado:")
@@ -309,7 +305,7 @@ class PostXML:
             etree.SubElement(info, 'xServ').text = 'CONS-CAD'
             etree.SubElement(info, 'UF').text = self.uf.upper()
             etree.SubElement(info, 'CNPJ').text = cnpj
-            xml = self._construir_xml_soap('ConsultaCNPJ', raiz, self.uf)
+            xml = self._construct_xml_soap('ConsultaCNPJ', raiz, self.uf)
             return self._post(url, xml)
 
     def status_servico(self):
@@ -319,7 +315,7 @@ class PostXML:
         etree.SubElement(raiz, 'tpAmb').text = str(self.ambiente)
         etree.SubElement(raiz, 'cUF').text = "35"
         etree.SubElement(raiz, 'xServ').text = "STATUS"
-        xml = self._construir_xml_soap('NFeStatusServico4', raiz, self.uf)
+        xml = self._construct_xml_soap('NFeStatusServico4', raiz, self.uf)
         print(etree.tostring(xml))
         return self._post(url, xml)
 
@@ -343,5 +339,5 @@ class PostXML:
         raiz = etree.Element('consReciNFe', versao="4.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(raiz, 'tpAmb').text = str(self.ambiente)
         etree.SubElement(raiz, 'nRec').text = number
-        xml = self._construir_xml_soap('NFeRetAutorizacao4', raiz, self.uf)
+        xml = self._construct_xml_soap('NFeRetAutorizacao4', raiz, self.uf)
         return self._post(url, xml)
