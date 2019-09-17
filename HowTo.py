@@ -1,4 +1,4 @@
-from utils.SignerXML import SignCert
+from xmlsigner.signerXml import SignCert
 from services.Services import Services
 from lxml import etree
 
@@ -24,7 +24,7 @@ with open(xmlEnvelope, 'rb') as xmlEnvelope:
 
 # Simply sign with extended A1 certificate
 xmlEnvelope = etree.fromstring(xmlData)
-signedRoot = objSignCert.signA1Cert(xmlEnvelope)
+signedRoot = objSignCert.signWithA1Cert(xmlEnvelope)
 print "Signed root:"
 print signedRoot
 

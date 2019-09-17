@@ -2,15 +2,12 @@
 from services.Services import Services
 
 taxId = "20018183000180"
-nfeNum = "160"
+nfeNum = "171"
 
 
-objServ = Services(certificateFile="../certfiles/converted.crt",
-                   privateKeyRSA="../certfiles/privRSAkey.pem",
-                   privateKeyFile="../certfiles/privateKey.key")
+objServ = Services(certificateContent=open("../certfiles/converted.crt", "rb").read(),
+                   RSAPrivateKeyContent=open("../certfiles/privRSAkey.pem", "rb").read(),
+                   privateKeyContent=open("../certfiles/privateKey.key", "rb").read())
 
-Services.certificateFile = "../certfiles/converted.crt"
-Services.privateKeyRSA = "../certfiles/privRSAkey.pem"
-Services.privateKeyFile = "../certfiles/privateKey.key"
 nfse = objServ.consultNfe(taxId=taxId, nfe=nfeNum)
 print(nfse)

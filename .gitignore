@@ -14,9 +14,9 @@ venv/*
 schemasv02/
 
 # Used certificates and keys
-certfiles/
+certfiles/*
 
-#pyxb files
+# pyxb files
 Bindings/*
 
 samples/*
