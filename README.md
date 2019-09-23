@@ -129,8 +129,8 @@ objServ = Services(
     certificateContent=open(certificateFile).read(),
     rsaKeyContent=open(privateKeyRSA).read()
 )
-taxId = "00623904000173"
-taxPayerId = "00623904000173"
+taxId = "12345678000198"
+taxPayerId = "12345678000198"
 result = objServ.consultTaxIdSubscription(taxId=taxId, taxPayerId=taxPayerId)
 print(result)
 ```
@@ -158,7 +158,6 @@ Reach out to me at one of the following places!
 
 - E-mail at <a href="mailto:" target="_blank">`vitor.gabriel@starkbank.com`</a>
 - Github at <a href="https://www.github.com/vsgobbi" target="_blank">`@vsgobbi`</a>
-- Instagram at <a href="https://www.instagram.com/vsgobbi/" target="_blank">`@vsgobbi`</a>
 
 ---
 
