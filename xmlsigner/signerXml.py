@@ -4,36 +4,41 @@ from xmlsigner.certMethods import Certificate
 
 class SignCert:
 
-    def __init__(self, privateKeyContent, certificateContent, RSAPrivateKeyContent):
+    def __init__(self, privateKeyContent, certificateContent, rsaKeyContent):
         self.privateKeyContent = privateKeyContent
         self.certificateContent = certificateContent
-        self.RSAPrivateKeyContent = RSAPrivateKeyContent
-
-    def loadPem(self, privateKeyContent):
-        return Certificate.valdidatePrivateKey(privateKeyContent)
+        self.rsaKeyContent = rsaKeyContent
 
     def loadCert(self):
         return Certificate.extractCertContent(self.certificateContent)
 
+    def loadPem(self):
+        return Certificate.valdidatePrivateKey(self.rsaKeyContent)
+
     def signWithA1Cert(self, bufferXml):
-        return Certificate.signWithA1Cert(xml=bufferXml,
-                                          certContent=self.certificateContent,
-                                          RSAPrivateKeyContent=self.RSAPrivateKeyContent)
+        return Certificate.signWithA1Cert(
+            xml=bufferXml,
+            certContent=self.certificateContent,
+            rsaKeyContent=self.rsaKeyContent
+        )
 
-    def verifySignature(self, signedRoot):
-        return Certificate.verifyCert(RSAPrivateKeyContent=self.RSAPrivateKeyContent, signedRoot=signedRoot)
+    def signRps(self, bufferXml):
+        return Certificate.signRpsWithRsa(
+            bufferXml=bufferXml,
+            certContent=self.certificateContent,
+            rsaKeyContent=self.rsaKeyContent
+        )
 
-    def signRPSWithRSA(self, bufferXml):
-        return Certificate.signRPSWithRSA(bufferXml=bufferXml,
-                                          certContent=self.certificateContent,
-                                          RSAPrivateKeyContent=self.RSAPrivateKeyContent)
+    def signCancel(self, bufferXml):
+        return Certificate.signCancelWithRsa(
+            bufferXml=bufferXml,
+            certContent=self.certificateContent,
+            rsaKeyContent=self.rsaKeyContent
+        )
 
-    def signCancelWithCrypto(self, bufferXml):
-        return Certificate.signCancelWithRSA(bufferXml,
-                                             certContent=self.certificateContent,
-                                             RSAPrivateKeyContent=self.RSAPrivateKeyContent)
-
-    def signLoteRPS(self, stringXml):
-        return Certificate.signLoteRPS(stringXml=stringXml,
-                                       certContent=self.certificateContent,
-                                       RSAPrivateKeyContent=self.RSAPrivateKeyContent,)
+    def signLoteRps(self, stringXml):
+        return Certificate.signLoteRps(
+            stringXml=stringXml,
+            certContent=self.certificateContent,
+            rsaKeyContent=self.rsaKeyContent
+        )

@@ -1,10 +1,11 @@
 ## Description
-Lib created in order to help users dealing with signed XML SOAP envelops. 
+Lib created in order to sign XML content for SOAP Envelops when a signed XML is required. 
 This library is intended to use with WebServices that requires certificate signatures values amongst the xml body.
-It's features are extracting .CERT or .PEM files and PrivateKeys to add values on Signatures elements as ***SignatureValue*** and ***X509Certificate*** with ***rsa-sha1*** encryption type,
+Pure Python coded. It's features are extracting .CERT or .PEM files and PrivateKeys to add values 
+on Signatures elements as ***SignatureValue*** and ***X509Certificate*** with ***rsa-sha1*** encryption type,
 compliance with http://www.w3.org/2000/09/xmldsig. 
-Sign a XML file or buffered string using A1 or A3 certificate, PKCS1_v1_5 supported by RFC3447. It serializes the data to request SOAP RPC services. 
-Creates POST requests on WebServices as NFe and NFSe.
+Sign a XML file or buffered string using A1 or A3 certificate, PKCS1_v1_5 supported by RFC3447. 
+It serializes the data to request SOAP RPC services. Creates POST requests on WebServices as NFe and NFSe.
 
 ## Table of Contents
 
@@ -53,7 +54,7 @@ pip install -r requirements.txt
 
 ## Features
 > Using the following libs: 
-- signxml, lxml, pyOpenSSL, requests, cryptography, rsa
+- lxml, pyCrypto, requests, ssl, rsa
 
 ---
 
@@ -83,21 +84,22 @@ pip --version
 
 #### How to extract certificate files:
 ```python
-from utils.SignerXML import SignCert
-from lxml import etree
-# Works with .crt and .pem files
-certificateFile = "path/To/Certificate/file.crt"
-privateKeyFile = "path/To/Key/Key.key"
-privateKeyRSA = "path/To/Key/RSAkey.pem"
+from xmlsigner.signerXml import SignCert
 
-objSignCert = SignCert(privateKeyFile=privateKeyFile,
-                       certificateFile=certificateFile,
-                       privateKeyRSA=privateKeyRSA)
+certificateFile = "./certfiles/converted.crt"
+privateKeyRSA = "./certfiles/privRSAkey.pem"
+privateKeyFile = "./certfiles/RSAPrivateKey.pem"
+
+objSignCert = SignCert(
+    privateKeyContent=open(privateKeyRSA).read(),
+    certificateContent=open(certificateFile).read(),
+    rsaKeyContent=open(privateKeyRSA).read()
+)
 
 objSignCert.loadPem()
 certContent = objSignCert.loadCert()
 print(certContent)
-keyContent = objSignCert.loadKey()
+keyContent = objSignCert.loadPem()
 print(keyContent)
 ```
 
@@ -110,7 +112,6 @@ with open(xmlEnvelope, 'rb') as xmlEnvelope:
 # Simply sign with extended A1 certificate
 xmlEnvelope = etree.fromstring(xmlData)
 signedRoot = objSignCert.signA1Cert(xmlEnvelope)
-print "Signed root:"
 print signedRoot
 ```
 
@@ -123,12 +124,14 @@ objSignCert.verifySignature(signedRoot)
 #### How to perform POST method using a signed xml:
 ```python
 # Sign and post a xml example:
-objRequestPost = Services(certificateFile=certificateFile, 
-                          privateKeyRSA=privateKeyRSA,
-                          privateKeyFile=privateKeyFile)
+objServ = Services(
+    privateKeyContent=open(privateKeyRSA).read(),
+    certificateContent=open(certificateFile).read(),
+    rsaKeyContent=open(privateKeyRSA).read()
+)
 taxId = "00623904000173"
 taxPayerId = "00623904000173"
-result = objRequestPost.consultTaxIdInscription(taxId=taxId, taxPayerId=taxPayerId)
+result = objServ.consultTaxIdSubscription(taxId=taxId, taxPayerId=taxPayerId)
 print(result)
 ```
 

@@ -15,6 +15,7 @@ schemasv02/
 
 # Used certificates and keys
 certfiles/*
+tests/*
 
 # pyxb files
 Bindings/*

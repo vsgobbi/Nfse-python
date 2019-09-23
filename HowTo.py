@@ -3,21 +3,21 @@ from services.Services import Services
 from lxml import etree
 
 
-# Works with .crt and .pem files
 certificateFile = "./certfiles/converted.crt"
 privateKeyRSA = "./certfiles/privRSAkey.pem"
-privateKeyFile = "./certfiles/privateKey.key"
+privateKeyFile = "./certfiles/RSAPrivateKey.pem"
 
-objSignCert = SignCert(privateKeyFile=privateKeyFile,
-                       certificateFile=certificateFile,
-                       privateKeyRSA=privateKeyRSA)
+objSignCert = SignCert(
+    privateKeyContent=open(privateKeyRSA).read(),
+    certificateContent=open(certificateFile).read(),
+    rsaKeyContent=open(privateKeyRSA).read()
+)
 
-objSignCert.loadPem()
+
 certContent = objSignCert.loadCert()
-print(certContent)
-keyContent = objSignCert.loadKey()
-print(keyContent)
-
+# print(certContent)
+print(objSignCert.loadPem())
+exit()
 xmlEnvelope = "file.xml"
 with open(xmlEnvelope, 'rb') as xmlEnvelope:
     xmlData = xmlEnvelope.read()
@@ -25,16 +25,17 @@ with open(xmlEnvelope, 'rb') as xmlEnvelope:
 # Simply sign with extended A1 certificate
 xmlEnvelope = etree.fromstring(xmlData)
 signedRoot = objSignCert.signWithA1Cert(xmlEnvelope)
-print "Signed root:"
-print signedRoot
-
-
-objSignCert.verifySignature(signedRoot)
-
+print("Signed root: %s" % signedRoot)
 
 # Sign and post a xml example:
-objRequestPost = Services(certificateFile=certificateFile, privateKeyRSA=privateKeyRSA, privateKeyFile=privateKeyFile)
+objServ = Services(
+    certificateContent=open("./certfiles/converted.crt", "rb").read(),
+    rsaKeyContent=open("./certfiles/privRSAkey.pem", "rb").read(),
+    privateKeyContent=open("./certfiles/privateKey.key", "rb").read()
+)
+
 taxId = "00623904000173"
 taxPayerId = "00623904000173"
-result = objRequestPost.consultTaxIdInscription(taxId=taxId, taxPayerId=taxPayerId)
+result = objServ.consultTaxIdSubscription(taxId=taxId, taxPayerId=taxPayerId)
 print(result)
+

@@ -2,19 +2,18 @@ import requests
 import ssl
 import re
 import socket
-
 from lxml import etree
 from xmlsigner.certMethods import Certificate
 from xmlsigner.customHttpConnection import NewAdapter
 
 
-NAMESPACE_NFE = 'http://www.portalfiscal.inf.br/nfe'
-NAMESPACE_NFE_PREFEITURA = 'http://www.prefeitura.sp.gov.br/nfe'
-NAMESPACE_SOAP = 'http://www.w3.org/2003/05/soap-envelope'
-NAMESPACE_XSI = 'http://www.w3.org/2001/XMLSchema-instance'
-NAMESPACE_XSD = 'http://www.w3.org/2001/XMLSchema'
-NAMESPACE_METODO = 'http://www.portalfiscal.inf.br/nfe/wsdl/'
-NAMESPACE_METODO_PREFEITURA = 'http://www.prefeitura.sp.gov.br/nfe'
+NAMESPACE_NFE = "http://www.portalfiscal.inf.br/nfe"
+NAMESPACE_NFE_PRODAM = "http://www.prefeitura.sp.gov.br/nfe"
+NAMESPACE_SOAP = "http://www.w3.org/2003/05/soap-envelope"
+NAMESPACE_XSI = "http://www.w3.org/2001/XMLSchema-instance"
+NAMESPACE_XSD = "http://www.w3.org/2001/XMLSchema"
+NAMESPACE_METODO_SEFAZ = "http://www.portalfiscal.inf.br/nfe/wsdl/"
+NAMESPACE_METODO_PRODAM = "http://www.prefeitura.sp.gov.br/nfe"
 
 NFE = {
         'SP': {
@@ -81,12 +80,9 @@ class PostXML:
                          )
             xml = xmlDef + xml
 
-            certFile = "../certfiles/certStark.pem"
+            certFile = "../certfiles/converted.crt"
             keyFile = "../certfiles/privateKey.key"
-
-            multipleFiles = [
-                ('cert', ('certStark.pem', open('../certfiles/certStark.pem', 'rb'), 'text/text')),
-                ('key', ('privateKey.key', open('../certfiles/privateKey.key', 'rb'), 'text/text'))]
+            caCertFile = "../certfiles/cacert.pem"
 
             clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             clientSocket.settimeout(20)
@@ -95,7 +91,7 @@ class PostXML:
                                     certfile=certFile,
                                     cert_reqs=ssl.CERT_REQUIRED,
                                     ssl_version=ssl.PROTOCOL_TLSv1,
-                                    ca_certs="../venv/lib/python2.7/site-packages/certifi/cacert.pem",
+                                    ca_certs=caCertFile,
                                     )
 
             s = requests.Session()
@@ -118,93 +114,106 @@ class PostXML:
             raise e
 
     def _resultDissector(self, xmlResult):
-        print(xmlResult)
-        if ("""ConsultaCNPJResponse xmlns=""" and """<Sucesso>true</Sucesso>""") in xmlResult:
-            splitResult = xmlResult.split("""</Cabecalho>""")
-            strResult = (splitResult[1].split("</Retorno"))
-            strResult = (str(strResult[0]))
+        if "ConsultaNFeEmitidasResponse xmlns=" in xmlResult and "<Sucesso>true</Sucesso>" in xmlResult:
+            splitResult = xmlResult.split("</Cabecalho>")
+            strResult = splitResult[1].split("</Retorno")
+            strResult = str(strResult[0])
             strResult = "<root>" + strResult + "</root>"
-            print(strResult)
+            return self._getTail(strResult)
+        if "ConsultaNFeRecebidasResponse xmlns=" in xmlResult and "<Sucesso>true</Sucesso>" in xmlResult:
+            splitResult = xmlResult.split("</Cabecalho>")
+            strResult = splitResult[1].split("</Retorno")
+            strResult = str(strResult[0])
+            strResult = "<root>" + strResult + "</root>"
+            return self._getTail(strResult)
+        if "ConsultaCNPJResponse xmlns=" in xmlResult and "<Sucesso>true</Sucesso>" in xmlResult:
+            splitResult = xmlResult.split("</Cabecalho>")
+            strResult = splitResult[1].split("</Retorno")
+            strResult = str(strResult[0])
+            strResult = "<root>" + strResult + "</root>"
             return self._resultDict(strResult)
-        if ("""EnvioRPSResponse""" and """<Sucesso>true</Sucesso>""") in xmlResult:
+        if "EnvioRPSResponse xmlns=" in xmlResult and "<Sucesso>true</Sucesso>" in xmlResult:
             splitResult = xmlResult.split("""<Alerta xmlns="">""")
-            strResult = (splitResult[1].split("""</Alerta>"""))
-            strResult = (str(strResult[0]))
+            strResult = splitResult[1].split("</Alerta>")
+            strResult = str(strResult[0])
             strResult = "<root>" + strResult + "</root>"
-            print(strResult)
             return self._resultDict(strResult)
-        if """Erro xmlns""" in xmlResult:
+        if "EnvioRPSResponse xmlns=" in xmlResult and "<Sucesso>false</Sucesso>" in xmlResult:
+            splitResult = xmlResult.split("</Cabecalho>")
+            strResult = splitResult[1].split("</RetornoEnvioRPS>")
+            strResult = str(strResult[0])
+            strResult = "<root>" + strResult + "</root>"
+            return self._resultDict(strResult)
+        if "CancelamentoNFeResponse xmlns=" in xmlResult and "<Sucesso>true</Sucesso>" in xmlResult:
+            splitResult = xmlResult.split("</Cabecalho>")
+            strResult = splitResult[1].split("</RetornoCancelamentoNFe>")
+            strResult = str(strResult[0])
+            strResult = "<root>" + strResult + "</root>"
+            return self._resultDict(strResult)
+        if "ConsultaNFeResponse xmlns=" in xmlResult and "<Sucesso>true</Sucesso>" in xmlResult:
+            splitResult = xmlResult.split("<ChaveNFe>")
+            splitResult = splitResult[1].replace("</ChaveNFe>", "")
+            strResult = splitResult.split("</NFe>")
+            strResult = str(strResult[0])
+            strResult = "<root>" + strResult + "</root>"
+            return self._resultDict(strResult)
+        if "Erro xmlns" in xmlResult:
             splitResult = xmlResult.split("""<Erro xmlns="">""")
-            strResult = (splitResult[1].split("""</Erro>"""))
-            strResult = (str(strResult[0]))
+            strResult = splitResult[1].split("</Erro>")
+            strResult = str(strResult[0])
             strResult = "<root>" + strResult + "</root>"
-            return self._resultDict(strResult)
-        if ("""EnvioRPSResponse""" and """<Sucesso>false</Sucesso>""") in xmlResult:
-            splitResult = xmlResult.split("""</Cabecalho>""")
-            print(splitResult[1])
-
-            strResult = (splitResult[1].split("""</RetornoEnvioRPS>"""))
-            strResult = (str(strResult[0]))
-            strResult = "<root>" + strResult + "</root>"
-            print("false")
-            print(strResult)
             return self._resultDict(strResult)
         else:
-            xmlResult = xmlResult[38:]
-            splitResult = xmlResult.split("<soap:Body>")
-            print(splitResult)
-            strResult = splitResult[1].split("</soap:Body>")
-            strResult = (str(strResult[0]))
-            strResult = "<root>" + strResult + "</root>"
-            print("aqui")
-            print(strResult)
-            return self._resultDict(strResult)
+            try:
+                xmlResult = xmlResult[38:]
+                splitResult = xmlResult.split("<soap:Body>")
+                strResult = splitResult[1].split("</soap:Body>")
+                strResult = str(strResult[0])
+                strResult = "<root>" + strResult + "</root>"
+                return self._resultDict(strResult)
+            except Exception as error:
+                raise error
 
     def _resultDict(self, strResult):
         res = {}
-        content = []
-        tags = []
-        texts = []
         root = etree.fromstring(strResult)
         for i in root.iter():
-            # print(i.tag)
-            # print(i.text)
             text = i.text
             text = text.encode("utf-8", "replace") if text else None
             if text:
-                # tags.append(i.tag)
-                # texts.append(text)
-                # content.append({"{tag}".format(tag=i.tag), "{text}".format(text=text)})
-                content.append("{tag}: ".format(tag=i.tag))
-                content.append(text)
-        # zipObj = zip(tags, texts)
-        print((content))
-        # print(dict(zipObj))
-        # print(dict(map(None, zipObj)))
-            # exit()
-            # text = i.text
-            # text = text.encode("utf-8", "replace") if text else None
-            # if text is not None:
-            #     # res.setdefault("{tag}".format(tag=i.tag), "{text}".format(text=text))
-            #     res.update({"{tag}".format(tag=i.tag): "{text}".format(text=text)})
-            #     content.append(res)
-        # return dumps(res, ensure_ascii=False)
+                res.setdefault("{tag}".format(tag=i.tag), "{text}".format(text=text))
         return res
 
-    def _constructXmlSoap(self, metodo, data, publicEntity):
+    def _getTail(self, strResult):
+        tree = etree.fromstring(strResult)
+        nfeData = []
+        res = {}
+        for i in tree:
+            res.update({
+                "SerieRPS": i.find('.//SerieRPS', namespaces={}).text,
+                "NumeroRPS": i.find('.//NumeroRPS', namespaces={}).text,
+                "DataEmissaoNFe": i.find('.//DataEmissaoNFe', namespaces={}).text,
+                "CPFCNPJTomador": i.find('.//CPFCNPJTomador/CNPJ', namespaces={}).text,
+                "CodigoVerificacao": i.find('.//CodigoVerificacao', namespaces={}).text,
+                "NumeroNFe": i.find('.//NumeroNFe', namespaces={}).text
+            })
+            nfeData.append(res.copy())
+        return nfeData
+
+    def _constructXmlSoap(self, method, data, publicEntity):
         self.entityType = publicEntity
-        if publicEntity == "SP":
+        if publicEntity == "SEFAZ":
             root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
               "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
             body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-            a = etree.SubElement(body, "nfeDadosMsg", xmlns=NAMESPACE_METODO+metodo)
+            a = etree.SubElement(body, "nfeDadosMsg", xmlns=NAMESPACE_METODO_SEFAZ + method)
             a.append(data)
             return root
-        if self.entityType == "PREFEITURA":
+        if self.entityType == "PRODAM":
             root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
                 "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
             body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-            a = etree.SubElement(body, "ConsultaCNPJRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+            a = etree.SubElement(body, "ConsultaCNPJRequest", xmlns=NAMESPACE_METODO_PRODAM)
             etree.SubElement(a, "VersaoSchema").text = "1"
             a.append(data)
             return root
@@ -213,10 +222,10 @@ class PostXML:
         root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
             "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
         body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-        a = etree.SubElement(body, "ConsultaCNPJRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+        a = etree.SubElement(body, "ConsultaCNPJRequest", xmlns=NAMESPACE_METODO_PRODAM)
         etree.SubElement(a, "VersaoSchema").text = "1"
-        mensagemXml = etree.SubElement(a, "MensagemXML")
-        mensagemXml.text = signedXml
+        msgXml = etree.SubElement(a, "MensagemXML")
+        msgXml.text = signedXml
         url = self._getUrl(type="CADASTRO")
         return self._post(url, root)
 
@@ -224,10 +233,10 @@ class PostXML:
         root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
             "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
         body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-        a = etree.SubElement(body, "ConsultaNFeRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+        a = etree.SubElement(body, "ConsultaNFeRequest", xmlns=NAMESPACE_METODO_PRODAM)
         etree.SubElement(a, "VersaoSchema").text = "1"
-        mensagemXml = etree.SubElement(a, "MensagemXML")
-        mensagemXml.text = signedXml
+        msgXml = etree.SubElement(a, "MensagemXML")
+        msgXml.text = signedXml
         url = self._getUrl(type="CONSULTA")
         return self._post(url, root)
 
@@ -235,10 +244,10 @@ class PostXML:
         root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
             "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
         body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-        a = etree.SubElement(body, "CancelamentoNFeRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+        a = etree.SubElement(body, "CancelamentoNFeRequest", xmlns=NAMESPACE_METODO_PRODAM)
         etree.SubElement(a, "VersaoSchema").text = "1"
-        mensagemXml = etree.SubElement(a, "MensagemXML")
-        mensagemXml.text = signedXml
+        msgXml = etree.SubElement(a, "MensagemXML")
+        msgXml.text = signedXml
         url = self._getUrl(type="CANCELAMENTO")
         return self._post(url, root)
 
@@ -246,10 +255,10 @@ class PostXML:
         root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
             "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
         body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-        a = etree.SubElement(body, "TesteEnvioLoteRPSRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+        a = etree.SubElement(body, "TesteEnvioLoteRPSRequest", xmlns=NAMESPACE_METODO_PRODAM)
         etree.SubElement(a, "VersaoSchema").text = "1"
-        mensagemXml = etree.SubElement(a, "MensagemXML")
-        mensagemXml.text = signedXml
+        msgXml = etree.SubElement(a, "MensagemXML")
+        msgXml.text = signedXml
         url = self._getUrl(type="TESTEENVIOLOTERPS")
         return self._post(url, root)
 
@@ -257,10 +266,10 @@ class PostXML:
         root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
             "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
         body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-        a = etree.SubElement(body, "EnvioLoteRPSRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+        a = etree.SubElement(body, "EnvioLoteRPSRequest", xmlns=NAMESPACE_METODO_PRODAM)
         etree.SubElement(a, "VersaoSchema").text = "1"
-        mensagemXml = etree.SubElement(a, "MensagemXML")
-        mensagemXml.text = signedXml
+        msgXml = etree.SubElement(a, "MensagemXML")
+        msgXml.text = signedXml
         url = self._getUrl(type="ENVIOLOTERPS")
         return self._post(url, root)
 
@@ -268,10 +277,10 @@ class PostXML:
         root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
             "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
         body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-        a = etree.SubElement(body, "EnvioRPSRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+        a = etree.SubElement(body, "EnvioRPSRequest", xmlns=NAMESPACE_METODO_PRODAM)
         etree.SubElement(a, "VersaoSchema").text = "1"
-        mensagemXml = etree.SubElement(a, "MensagemXML")
-        mensagemXml.text = signedXml
+        msgXml = etree.SubElement(a, "MensagemXML")
+        msgXml.text = signedXml
         url = self._getUrl(type="AUTORIZACAO")
         return self._post(url, root)
 
@@ -279,10 +288,10 @@ class PostXML:
         root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
             "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
         body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-        a = etree.SubElement(body, "ConsultaNFeRecebidasRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+        a = etree.SubElement(body, "ConsultaNFeRecebidasRequest", xmlns=NAMESPACE_METODO_PRODAM)
         etree.SubElement(a, "VersaoSchema").text = "1"
-        mensagemXml = etree.SubElement(a, "MensagemXML")
-        mensagemXml.text = signedXml
+        msgXml = etree.SubElement(a, "MensagemXML")
+        msgXml.text = signedXml
         url = self._getUrl(type="CONSULTA")
         return self._post(url, root)
 
@@ -290,15 +299,15 @@ class PostXML:
         root = etree.Element("{%s}Envelope" % NAMESPACE_SOAP, nsmap={
             "xsi": NAMESPACE_XSI, "xsd": NAMESPACE_XSD, "soap": NAMESPACE_SOAP})
         body = etree.SubElement(root, "{%s}Body" % NAMESPACE_SOAP)
-        a = etree.SubElement(body, "ConsultaNFeEmitidasRequest", xmlns=NAMESPACE_METODO_PREFEITURA)
+        a = etree.SubElement(body, "ConsultaNFeEmitidasRequest", xmlns=NAMESPACE_METODO_PRODAM)
         etree.SubElement(a, "VersaoSchema").text = "1"
-        mensagemXml = etree.SubElement(a, "MensagemXML")
-        mensagemXml.text = signedXml
+        msgXml = etree.SubElement(a, "MensagemXML")
+        msgXml.text = signedXml
         url = self._getUrl(type="CONSULTA")
         return self._post(url, root)
 
-    def sefazSubscription(self, cnpj):  # Sefaz
-        if self.uf.upper() == "SP":
+    def sefazSubscription(self, cnpj):
+        if self.uf.upper() == "SEFAZ":
             root = etree.Element("ConsCad", versao="2.00", xmlns=NAMESPACE_NFE)
             info = etree.SubElement(root, "infCons")
             etree.SubElement(info, "xServ").text = "CONS-CAD"
@@ -308,25 +317,18 @@ class PostXML:
             url = self._getUrl(type="CADASTRO")
             return self._post(url, xml)
 
-        elif self.uf.upper() == "PREFEITURA":
+        elif self.uf.upper() == "PRODAM":
             root = etree.Element("MensagemXML")
-            p1 = "PedidoConsultaCNPJ"
-            info = etree.SubElement(root, _tag=p1, versao="4.00",
-                                    nsmap={"xmlns": NAMESPACE_XSD, "xsi": NAMESPACE_XSI})
             cabecalho = etree.SubElement(root, "Cabecalho", Versao="1")
             remetente = etree.SubElement(cabecalho, "CNPJRemetente")
             etree.SubElement(remetente, "CNPJ").text = cnpj
             contribuinte = etree.SubElement(root, "CNPJContribuinte")
             etree.SubElement(contribuinte, "CNPJ").text = cnpj
             xmlToSign = etree.tostring(root)
-            xmlSigned = Certificate.signWithA1Cert(xmlToSign, certContent=self.cert, RSAPrivateKeyContent=self.key)
+            xmlSigned = Certificate.signWithA1Cert(xmlToSign, certContent=self.cert, rsaKeyContent=self.key)
             xmlSigned = (etree.fromstring(xmlSigned))
             xmlSigned = self._constructXmlSoap("ConsultaCNPJRequest", xmlSigned, self.uf)
             url = self._getUrl(type="CADASTRO")
-
-            print("Envelope assinado:")
-            print(etree.tostring(xmlSigned))
-
             return self._post(url, xmlSigned)
 
         else:
@@ -339,7 +341,7 @@ class PostXML:
             xml = self._constructXmlSoap("ConsultaCNPJ", root, self.uf)
             return self._post(url, xml)
 
-    def serviceStatus(self):  # Consulta status do WebService na Sefaz
+    def serviceStatus(self):
         url = self._getUrl("STATUS")
         root = etree.Element("consStatServ", versao="4.00", xmlns=NAMESPACE_NFE)
         etree.SubElement(root, "tpAmb").text = str(self.environment)
@@ -348,18 +350,6 @@ class PostXML:
         xml = self._constructXmlSoap("NFeStatusServico4", root, self.uf)
         print(etree.tostring(xml))
         return self._post(url, xml)
-
-    def autorizacao(self, nota, consulta):  # Envio de nfe na Sefaz
-        url = self._getUrl(type=consulta)
-        if consulta == "SP":
-            xml = etree.tostring(nota, encoding="unicode", pretty_print=False)
-            return self._post(url, xml)
-        elif consulta == "PREFEITURA":
-            xmlPrefeitura = etree.tostring(nota, encoding="unicode", pretty_print=True)
-            print(xmlPrefeitura)
-            return self._post(url, xmlPrefeitura)
-        else:
-            raise Exception("""Metodo criado somente para SEFAZ "SP" ou "PREFEITURA" de SP""")
 
     def receiptConsult(self, number):
         url = self._getUrl(type="RECIBO")

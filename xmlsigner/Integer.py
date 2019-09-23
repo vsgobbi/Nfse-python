@@ -1,6 +1,5 @@
 def intToBytes(num):
     """Return converted integer to bytestring.
-    Note: string encoding is faster than divmod(num, 256) in Python.
     Args:
       num: integer, non-negative
     Returns:
@@ -11,18 +10,13 @@ def intToBytes(num):
     if not isNatural(num, includeZero=True):
         raise ValueError("%s is not a non-negative integer.")
     hexed = "%x" % num
-    # align hexadecimal string to byte boundaries
     if len(hexed) % 2 == 1:
         hexed = '0%s' % hexed
     return hexed.decode('hex')
 
 
 def isNatural(value, includeZero=False):
-    """Return if value is a natural integer in Python.
-
-    Returns:
-      bool: is value a natural number?
-    """
+    """Return if value is a natural integer."""
     return all((
         isinstance(value, (int, long)),
         value >= 0,
@@ -39,7 +33,6 @@ def b64d(n):
 
 def b64e(n):
     """Return encoded base64 string."""
-
     if type(n) in (int, long):
         n = intToBytes(n)
 
