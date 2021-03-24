@@ -2,7 +2,7 @@ certifi==2019.6.16
 cffi==1.12.3
 chardet==3.0.4
 future==0.16.0
-rsa==4.0 
+rsa==4.1 
 idna==2.8
 ipaddress==1.0.22
 lxml==4.6.2
