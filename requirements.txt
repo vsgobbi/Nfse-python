@@ -5,7 +5,7 @@ future==0.16.0
 rsa==4.0 
 idna==2.8
 ipaddress==1.0.22
-lxml==4.6.2
+lxml==4.6.3
 pyasn1==0.4.6
 pycparser==2.19
 requests==2.22.0
